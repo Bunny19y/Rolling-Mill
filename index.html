@@ -179,11 +179,6 @@
       font-weight: 500;
     }
 
-    .input-row {
-      display: flex;
-      gap: 0.5rem;
-    }
-
     input, select {
       width: 100%;
       padding: 0.75rem;
@@ -249,10 +244,17 @@
     }
 
     .result-val {
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       font-weight: 800;
       color: #34d399;
-      margin-top: 0.3rem;
+      margin-top: 0.2rem;
+    }
+
+    .result-sub {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-top: 0.8rem;
     }
 
     footer {
@@ -298,6 +300,8 @@
       <div class="list-menu">
         <button class="sub-btn" onclick="showView('calc-weight')">1. To calculate Billet weight</button>
         <button class="sub-btn" onclick="showView('calc-tmt')">2. Conversion of billet into TMT Length</button>
+        <button class="sub-btn" onclick="showView('calc-rpm')">3. Calculate motor RPM from MPS & Gear Ratio</button>
+        <button class="sub-btn" onclick="showView('calc-mps')">4. Calculate MPS from Motor RPM</button>
       </div>
     </div>
 
@@ -408,6 +412,80 @@
       </div>
     </div>
 
+    <!-- Calculator 3: Motor RPM & Roll RPM from MPS & Gear Ratio -->
+    <div id="calc-rpm" class="view">
+      <button class="btn-back" onclick="showView('view-mill')">&larr; Back</button>
+      <div class="card">
+        <div class="card-title">Calculate Motor RPM from MPS & Gear Ratio</div>
+        <div class="formula-box">
+          Formula:<br />
+          Roll RPM = (MPS × 60) / (π × Roll Diameter in Meters)<br />
+          Motor RPM = Roll RPM × Gear Ratio
+        </div>
+
+        <div class="input-group">
+          <label>MPS (Meter Per Second):</label>
+          <input type="number" id="rpm-mps" placeholder="e.g. 0.139" step="any" />
+        </div>
+
+        <div class="input-group">
+          <label>Roll Diameter (mm):</label>
+          <input type="number" id="rpm-dia" placeholder="e.g. 577" step="any" />
+        </div>
+
+        <div class="input-group">
+          <label>Gear Ratio:</label>
+          <input type="number" id="rpm-gear" placeholder="e.g. 117.808" step="any" />
+        </div>
+
+        <button class="btn-submit" onclick="calculateMotorRPM()">Calculate RPM</button>
+
+        <div id="result-rpm" class="result-box">
+          <div>Calculated Roll RPM:</div>
+          <div class="result-val" id="res-roll-rpm">0.00 RPM</div>
+          <div class="result-sub">Calculated Motor RPM:</div>
+          <div class="result-val" id="res-motor-rpm" style="color: #38bdf8;">0.00 RPM</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calculator 4: MPS from Motor RPM -->
+    <div id="calc-mps" class="view">
+      <button class="btn-back" onclick="showView('view-mill')">&larr; Back</button>
+      <div class="card">
+        <div class="card-title">Calculate MPS from Motor RPM</div>
+        <div class="formula-box">
+          Formula:<br />
+          Roll RPM = Motor RPM / Gear Ratio<br />
+          MPS = (Roll RPM × π × Roll Diameter in Meters) / 60
+        </div>
+
+        <div class="input-group">
+          <label>Motor RPM:</label>
+          <input type="number" id="mps-motor-rpm" placeholder="e.g. 542" step="any" />
+        </div>
+
+        <div class="input-group">
+          <label>Roll Diameter (mm):</label>
+          <input type="number" id="mps-dia" placeholder="e.g. 577" step="any" />
+        </div>
+
+        <div class="input-group">
+          <label>Gear Ratio:</label>
+          <input type="number" id="mps-gear" placeholder="e.g. 117.808" step="any" />
+        </div>
+
+        <button class="btn-submit" onclick="calculateMPS()">Calculate MPS</button>
+
+        <div id="result-mps" class="result-box">
+          <div>Calculated Roll RPM:</div>
+          <div class="result-val" id="res-mps-roll-rpm">0.00 RPM</div>
+          <div class="result-sub">Calculated MPS (Meter Per Second):</div>
+          <div class="result-val" id="res-mps-val" style="color: #38bdf8;">0.00 MPS</div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Footer -->
@@ -493,6 +571,46 @@
 
       document.getElementById('res-tmt-val').textContent = tmtLength_m.toFixed(2) + ' Meters';
       document.getElementById('result-tmt').classList.add('active');
+    }
+
+    // Calculator 3: Motor RPM & Roll RPM
+    function calculateMotorRPM() {
+      const mps = parseFloat(document.getElementById('rpm-mps').value);
+      const dia_mm = parseFloat(document.getElementById('rpm-dia').value);
+      const gearRatio = parseFloat(document.getElementById('rpm-gear').value);
+
+      if (isNaN(mps) || isNaN(dia_mm) || isNaN(gearRatio) || mps <= 0 || dia_mm <= 0 || gearRatio <= 0) {
+        alert('Kripya sabhi values sahi se bharein!');
+        return;
+      }
+
+      const dia_m = dia_mm / 1000;
+      const rollRPM = (mps * 60) / (Math.PI * dia_m);
+      const motorRPM = rollRPM * gearRatio;
+
+      document.getElementById('res-roll-rpm').textContent = rollRPM.toFixed(2) + ' RPM';
+      document.getElementById('res-motor-rpm').textContent = motorRPM.toFixed(2) + ' RPM';
+      document.getElementById('result-rpm').classList.add('active');
+    }
+
+    // Calculator 4: MPS from Motor RPM
+    function calculateMPS() {
+      const motorRPM = parseFloat(document.getElementById('mps-motor-rpm').value);
+      const dia_mm = parseFloat(document.getElementById('mps-dia').value);
+      const gearRatio = parseFloat(document.getElementById('mps-gear').value);
+
+      if (isNaN(motorRPM) || isNaN(dia_mm) || isNaN(gearRatio) || motorRPM <= 0 || dia_mm <= 0 || gearRatio <= 0) {
+        alert('Kripya sabhi values sahi se bharein!');
+        return;
+      }
+
+      const rollRPM = motorRPM / gearRatio;
+      const dia_m = dia_mm / 1000;
+      const mps = (rollRPM * Math.PI * dia_m) / 60;
+
+      document.getElementById('res-mps-roll-rpm').textContent = rollRPM.toFixed(2) + ' RPM';
+      document.getElementById('res-mps-val').textContent = mps.toFixed(3) + ' MPS';
+      document.getElementById('result-mps').classList.add('active');
     }
   </script>
 </body>
